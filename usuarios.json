@@ -1,0 +1,13 @@
+[
+  {
+    "usuario": "admin",
+    "senha": "321455",
+    "nome": "Admin",
+    "nivel": 2,
+    "sobre": "System",
+    "celular": "(67) 99921-4470",
+    "email": "santyagomarine@hotmail.com",
+    "patrocinador": "1",
+    "avatar": "/man.jpeg"
+  }
+]

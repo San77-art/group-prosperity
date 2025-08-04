@@ -1,0 +1,12 @@
+<button onclick="entrarNaFila()" class="btn btn-success">Entrar na Fila do Próximo Giro</button>
+
+<script>
+  function entrarNaFila() {
+    fetch('/api/entrar-na-fila', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        alert(data.mensagem || data.erro);
+        location.reload();
+      });
+  }
+</script>

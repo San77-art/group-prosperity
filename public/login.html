@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - Sistema</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    .message-container {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="d-flex justify-content-center align-items-center vh-100 bg-light">
+  <div class="card p-4 shadow" style="width: 350px;">
+    <h3 class="mb-4 text-center">Entrar no Sistema</h3>
+
+    <!-- MENSAGEM (será substituída pelo backend ou exibida via JS) -->
+    <!-- MENSAGEM -->
+
+    <!-- Mensagem de erro (padrão, se JS ativar) -->
+    <div id="erro" class="alert alert-danger d-none">Usuário ou senha inválidos</div>
+
+    <form action="/login" method="POST">
+      <div class="mb-3">
+        <label for="usuario" class="form-label">Usuário</label>
+        <input type="text" class="form-control" id="usuario" name="usuario" required autofocus />
+      </div>
+      <div class="mb-3">
+        <label for="senha" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="senha" name="senha" required />
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Entrar</button>
+    </form>
+
+    <div class="text-center mt-3">
+      <a href="/new-account.html" class="small">Criar uma conta</a>
+    </div>
+  </div>
+
+  <script>
+    // Função para exibir mensagens com base na URL
+    const params = new URLSearchParams(window.location.search);
+    const erro = params.get("erro");
+    const sucesso = params.get("sucesso");
+    const cadastro = params.get("cadastro");
+
+    const messageContainer = document.querySelector('.message-container') ||
+      (function() {
+        const container = document.createElement('div');
+        container.className = 'message-container';
+        const form = document.querySelector('form');
+        form.parentNode.insertBefore(container, form);
+        return container;
+      })();
+
+    // Mostrar mensagens
+    if (cadastro === 'ok') {
+      messageContainer.innerHTML = '<div class="alert alert-success">Cadastro realizado! Faça login abaixo.</div>';
+    } else if (sucesso === '1') {
+      messageContainer.innerHTML = '<div class="alert alert-success">Login realizado com sucesso!</div>';
+    } else if (erro === '1') {
+      document.getElementById("erro").classList.remove("d-none");
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

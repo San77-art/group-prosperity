@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evoluir Show - 4 Níveis - Criar uma Conta PRINCIPAL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card-box {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            max-width: 300px;
+        }
+        .form-title {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .avatar-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .avatar-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            margin-bottom: 10px;
+        }
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+        }
+        .btn-custom {
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-custom:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .text-white {
+            color: white !important;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            padding: 20px;
+        }
+        .terms-link {
+            color: #ffc107;
+            text-decoration: underline;
+        }
+        .terms-modal {
+            color: #333;
+        }
+        .input-group-text {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+        /* Mensagem de erro personalizada */
+        .alert-custom {
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <img src="" alt="Logo" class="logo">
+        </div>
+
+        <!-- MENSAGEM (substituída pelo backend ou exibida via JS) -->
+        <!-- MENSAGEM -->
+
+        <div class="card-box">
+            <h2 class="form-title">Criar Uma Conta PRINCIPAL</h2>
+            <form id="registrationForm" action="/cadastrar" method="POST">
+                <div class="avatar-container">
+                    <div class="row">
+                        <div class="col-md-6 text-center">
+                            <img src="man.jpeg" class="avatar-img" alt="Avatar Masculino">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="avatar" value="male" id="maleAvatar" required>
+                                <label class="form-check-label text-white" for="maleAvatar">Masculino</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <img src="woman.jpeg" class="avatar-img" alt="Avatar Feminino">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="avatar" value="female" id="femaleAvatar" required>
+                                <label class="form-check-label text-white" for="femaleAvatar">Feminino</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">ID</span>
+                            <input type="number" class="form-control" name="patrocinador" placeholder="ID de quem te Indicou" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <input type="text" class="form-control" name="nome" placeholder="Primeiro Nome" pattern="[a-zA-Z ]{4,50}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <input type="text" class="form-control" name="sobre" placeholder="Sobrenome" pattern="[a-zA-Z ]{4,50}" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <input type="tel" class="form-control" name="celular" id="celular" placeholder="Celular/Whatsapp" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <input type="email" class="form-control" name="email" placeholder="Seu E-Mail" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <p class="text-danger small">Usuário apenas letras <b>minúsculas</b> até <b>20 caracteres</b></p>
+                    <input type="text" class="form-control" name="usuario" placeholder="Usuário" maxlength="20" pattern="[a-z0-9]{4,20}" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <input type="password" class="form-control" name="senha" id="senha" placeholder="Senha" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <input type="password" class="form-control" name="senha2" id="senha2" placeholder="Repetir Senha" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label text-white" for="termsCheck">
+                                Eu aceito <a href="#" class="terms-link" data-bs-toggle="modal" data-bs-target="#termosModal">Termos e Condições</a>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-custom btn-lg text-white">Concluir Cadastro</button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <p class="text-white">
+                    Já tem uma conta? 
+                    <a href="/" class="text-primary">Fazer Login</a>
+                </p>
+                <p class="text-white">
+                    Para fazer o cadastro adicional clique aqui:
+                    <a href="#" class="text-primary">Cadastro ADICIONAL</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="text-white">2025 © Evoluir Show - 4 Níveis</p>
+        </div>
+    </div>
+
+    <!-- Modal de Termos -->
+    <div class="modal fade" id="termosModal" tabindex="-1" aria-labelledby="termosModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content terms-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termosModalLabel">Termos e Condições de Uso</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Seu conteúdo de termos permanece igual -->
+                    <strong>O QUE É O ?</strong>
+                    <br><br>
+                    <strong>O </strong> É um SISTEMA INTELIGENTE DE INCENTIVO A DOAÇÃO ESPONTÂNEA
+                    <br><br>
+                    Nosso objetivo é distribuir renda entre nossos participantes.
+                    <br><br>
+                    Não somos uma empresa de <strong>MMN</strong>.
+                    É apenas um sistema desenvolvido para ORGANIZAR as pessoas facilitando o desenvolvimento de todo o GRUPO.
+                    <br><br>
+                    O sistema é baseado no Cód. Civil, Art. 539, 540 e 541 que rege sobre doações.
+                    <br><br>
+                    <strong>TERMOS E CONDIÇÕES DE USO </strong>
+                    <br><br>
+                    1 - Não existe nenhum tipo de investimento. O membro DOADOR faz as suas DOAÇÕES de livre e espontânea vontade, sem coação ou influência de quem quer que seja, gratuitamente e sem condições ou encargos de qualquer natureza, do valor referente a cada etapa do sistema.
+                    <br><br>
+                    2 - Não existe nenhuma promessa ou garantia de retorno financeiro.
+                    <br><br>
+                    3 - Para participar do sistema o usuário deve ser maior de 18 anos.
+                    <br><br>
+                    4 - Ao preencher seus dados no sistema, informe os dados reais para facilitar a comunicação. Todas as doações serão feitas através da <strong>Conta Bancária</strong> e este será os meios que vamos trabalhar para agilizar o sistema.
+                    <br><br>
+                    5 - Após realizar a DOAÇÃO e fazer os procedimentos de confirmação através do seu backoffice, entre em contato com o Donatário e informe sobre a DOAÇÃO, solicitando a confirmação de recebimento e a liberação imediata do seu cadastro (ativação).
+                    <br><br>
+                    6 - As <strong>DOAÇOES</strong> são realizados diretamente na <strong>Conta Bancária</strong> de cada participante!
+                    <br><br>
+                    7 - Todo participante tem o direito de deixar de participar do sistema a qualquer momento.
+                    <br><br>
+                    8 - O usuário terá um prazo de ativação para todos os Niveis e planos;
+                    <br><br>
+                    9 - Não tem atravessadores e nenhum lucro direto para a empresa X ou Y.
+                    <br><br>
+                    10 - A velocidade de ciclagens depende exclusivamente do ritmo de desenvolvimento das equipes;
+                    <br><br>
+                    11 - O uso de documentos próprios ou de terceiros é de inteira responsabilidade do membro cadastrado;
+                    <br><br>
+                    12 - Os anexos de comprovantes de DOAÇOES só serão aceitos nas seguintes extensões: jpg, png e pdf;
+                    <br><br>
+                    13 - Você DOA apenas um valor inicial no plano em que se cadastrar uma única vez, os demais valores do plano em que se cadastrar são oriundos das próprias DOAÇÕES.
+                    <br><br>
+                    A - No GIRO 1, o usuário terá até 12HS para ter sua conta ativada pelo donatário;
+                    <br><br>
+                    B - Nos demais GIROS, o usuário terá até 24HS para ter sua matriz ativada pelo donatário.
+                    <br><br>
+                    Se você concorda com esses termos, faça seu cadastro no sistema e siga as instruções do mesmo. Caso não concorde com os termos, interrompa seu cadastro e deixe a página.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Máscara de telefone
+        document.getElementById('celular').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 10) {
+                e.target.value = value.replace(/(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+            } else if (value.length > 5) {
+                e.target.value = value.replace(/(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+            } else if (value.length > 2) {
+                e.target.value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+            } else {
+                e.target.value = value;
+            }
+        });
+
+        // Validação de senha no submit
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            const senha = document.getElementById('senha').value;
+            const senha2 = document.getElementById('senha2').value;
+
+            // Validação de força da senha
+            const erros = [];
+            if (senha.length < 6) erros.push('mínimo 6 caracteres');
+            if (!/\d/.test(senha)) erros.push('um número');
+            if (!/[A-Z]/.test(senha)) erros.push('uma letra maiúscula');
+
+            if (erros.length > 0) {
+                e.preventDefault();
+                alert('Senha fraca: ' + erros.join(', ') + '.');
+                return false;
+            }
+
+            // Confirmação de senha
+            if (senha !== senha2) {
+                e.preventDefault();
+                alert('As senhas não coincidem!');
+                return false;
+            }
+        });
+    </script>
+
+    <script>
+        // Exibir mensagens dinâmicas (erro, sucesso)
+        const params = new URLSearchParams(window.location.search);
+        const erro = params.get('erro');
+        const detalhe = params.get('detalhe');
+
+        const messageContainer = document.createElement('div');
+        messageContainer.className = 'alert-custom';
+        messageContainer.style.marginBottom = '1rem';
+
+        const form = document.getElementById('registrationForm');
+
+        if (erro === 'usuario-existe') {
+            messageContainer.classList.add('alert', 'alert-danger');
+            messageContainer.textContent = 'Usuário já cadastrado.';
+            form.parentNode.insertBefore(messageContainer, form);
+        } else if (erro === 'senha') {
+            messageContainer.classList.add('alert', 'alert-warning');
+            messageContainer.textContent = 'Senha fraca: ' + decodeURIComponent(detalhe || 'inválida');
+            form.parentNode.insertBefore(messageContainer, form);
+        }
+    </script>
+</body>
+</html>

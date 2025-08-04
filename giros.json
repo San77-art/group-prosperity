@@ -1,0 +1,37 @@
+[
+  {
+    "nivel": 1,
+    "valor": 20,
+    "recebe": 0,
+    "retido": 20,
+    "descricao": "Giro Inicial (retenção)"
+  },
+  {
+    "nivel": 2,
+    "valor": 20,
+    "recebe": 18,
+    "retido": 2,
+    "descricao": "Giro 2 - Recebe US$18"
+  },
+  {
+    "nivel": 3,
+    "valor": 50,
+    "recebe": 45,
+    "retido": 5,
+    "descricao": "Giro 3 - Recebe US$45"
+  },
+  {
+    "nivel": 4,
+    "valor": 100,
+    "recebe": 90,
+    "retido": 10,
+    "descricao": "Giro 4 - Recebe US$90"
+  },
+  {
+    "nivel": 5,
+    "valor": 200,
+    "recebe": 180,
+    "retido": 20,
+    "descricao": "Giro 5 - Recebe US$180"
+  }
+]
