@@ -165,19 +165,25 @@
 
   <!-- Scripts -->
   <script>
-    // Carregar nome do usuário
-    fetch('/api/usuario')
-      .then(response => {
-        if (!response.ok) throw new Error('Não autenticado');
-        return response.json();
-      })
-      .then(data => {
+     // Carregar dados do usuário
+  fetch('/api/usuario')
+    .then(r => {
+      if (r.redirected) {
+        // Se o servidor redirecionar (por falta de login), vá para o login
+        window.location.href = r.url;
+        return;
+      }
+      return r.json();
+    })
+    .then(data => {
+      if (data) {
         document.getElementById('nomeUsuario').textContent = data.nome;
-      })
-      .catch(err => {
-        console.error("Erro ao carregar usuário:", err);
-        window.location.href = '/?erro=1';
-      });
+      }
+    })
+    .catch(err => {
+      console.warn('Erro ao carregar usuário:', err);
+      window.location.href = '/?erro=1'; // Força redirecionamento limpo
+    });
 
     // Carregar nível e posição na fila
     fetch('/api/giros')

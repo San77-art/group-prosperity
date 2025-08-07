@@ -32,7 +32,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'MeuSistemaSeguro123!@#',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 30 * 60 * 1000 } // 30 minutos
+  cookie: { maxAge: 30 * 60 * 1000 } // 2 Horas
 }));
 
 // 🔐 Middleware: verificar login
