@@ -1,86 +1,39 @@
+// server.js
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const path = require('path');
-const app = express();
-const PORT = 3000;
-
-// Middleware
-app.use(session({
-  secret: 'chave-secreta-super-segura-para-sessao',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 30 * 60 * 1000 } // 30 min
-}));
-
 const axios = require('axios');
 
-const ZAPI_TOKEN = 'SEU_TOKEN_AQUI'; // Substitua
-const ZAPI_URL = 'https://api.z-api.io/instances/SEU_ID/messages/text';
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Função: enviar WhatsApp
-async function enviarWhatsApp(numero, mensagem) {
-  try {
-    await axios.post(ZAPI_URL, {
-      phone: numero,
-      message: mensagem
-    }, {
-      headers: { 'Authorization': ZAPI_TOKEN }
-    });
-    console.log(`WhatsApp enviado para ${numero}`);
-  } catch (err) {
-    console.error('Erro ao enviar WhatsApp:', err.response?.data || err.message);
-  }
+// Caminhos dos arquivos
+const USUARIOS_FILE = path.join(__dirname, 'usuarios.json');
+const FILA_FILE = path.join(__dirname, 'fila.json');
+const GIROS_FILE = path.join(__dirname, 'giros.json');
+const CAIXA_FILE = path.join(__dirname, 'caixa.json');
+const AVATARS_DIR = path.join(__dirname, 'public', 'avatars');
+
+// Cria pastas se não existirem
+if (!fs.existsSync(AVATARS_DIR)) {
+  fs.mkdirSync(AVATARS_DIR, { recursive: true });
 }
 
-// Rota: GET /admin.html → protegida
-app.get('/admin.html', verificaLogin, (req, res) => {
-  const usuarios = lerUsuarios();
-  const user = usuarios.find(u => u.usuario === req.session.usuario);
-  if (user.usuario !== 'admin') {
-    return res.redirect('/index.html');
-  }
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-// Rota: GET /api/admin/filas → retorna todas as filas
-app.get('/api/admin/filas', verificaLogin, (req, res) => {
-  const usuarios = lerUsuarios();
-  const user = usuarios.find(u => u.usuario === req.session.usuario);
-  if (user.usuario !== 'admin') {
-    return res.status(403).json({ erro: 'Acesso negado' });
-  }
-
-  const fila = lerFila();
-  res.json(fila);
-});
-
-// Rota: GET /api/admin/exportar → exporta CSV
-app.get('/api/admin/exportar', verificaLogin, (req, res) => {
-  const usuarios = lerUsuarios();
-  const user = usuarios.find(u => u.usuario === req.session.usuario);
-  if (user.usuario !== 'admin') {
-    return res.status(403).json({ erro: 'Acesso negado' });
-  }
-
-  // Cabeçalho do CSV
-  let csv = 'ID,Nome,Email,Celular,Nível,Cadastro\n';
-  usuarios.forEach(u => {
-    csv += `${u.usuario},"${u.nome} ${u.sobre}",${u.email},${u.celular},${u.nivel},${u.data_cadastro}\n`;
-  });
-
-  res.header('Content-Type', 'text/csv');
-  res.header('Content-Disposition', 'attachment; filename=usuarios.csv');
-  res.send(csv);
-});
-
-// Serve a pasta public/ como estática
+// Middleware
 app.use(express.static(path.join(__dirname, 'public')));
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// 🔐 Sessão segura
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'MeuSistemaSeguro123!@#',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 30 * 60 * 1000 } // 30 minutos
+}));
 
 // 🔐 Middleware: verificar login
 function verificaLogin(req, res, next) {
@@ -95,14 +48,110 @@ function verificaLogin(req, res, next) {
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  message: { erro: 'Muitas tentativas falhas. Tente novamente em 15 minutos.' }
+  message: { erro: 'Muitas tentativas. Tente em 15 min.' }
 });
 
 const cadastroLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 3,
-  message: { erro: 'Muitos cadastros. Tente novamente em 1 hora.' }
+  message: { erro: 'Muitos cadastros. Tente em 1 hora.' }
 });
+
+// 📂 Funções de leitura e salvamento
+
+function lerUsuarios() {
+  try {
+    return JSON.parse(fs.readFileSync(USUARIOS_FILE, 'utf-8'));
+  } catch (err) {
+    console.error('Erro ao ler usuarios.json:', err);
+    return [];
+  }
+}
+
+function salvarUsuarios(usuarios) {
+  fs.writeFileSync(USUARIOS_FILE, JSON.stringify(usuarios, null, 2));
+}
+
+function lerFila() {
+  try {
+    return JSON.parse(fs.readFileSync(FILA_FILE, 'utf-8'));
+  } catch (err) {
+    return { "2": [], "3": [], "4": [], "5": [] };
+  }
+}
+
+function salvarFila(fila) {
+  fs.writeFileSync(FILA_FILE, JSON.stringify(fila, null, 2));
+}
+
+function lerGiros() {
+  try {
+    return JSON.parse(fs.readFileSync(GIROS_FILE, 'utf-8'));
+  } catch (err) {
+    return [];
+  }
+}
+
+// ✅ Caixa do sistema (retenção de 10%)
+function lerCaixa() {
+  try {
+    return JSON.parse(fs.readFileSync(CAIXA_FILE, 'utf-8'));
+  } catch (err) {
+    return { totalRetido: 0, movimentacoes: [] };
+  }
+}
+
+function salvarCaixa(caixa) {
+  fs.writeFileSync(CAIXA_FILE, JSON.stringify(caixa, null, 2));
+}
+
+function registrarRetencao(valor, descricao = '') {
+  const caixa = lerCaixa();
+  caixa.totalRetido += valor;
+  caixa.movimentacoes.push({
+    data: new Date().toISOString().split('T')[0],
+    valor,
+    tipo: 'retencao',
+    descricao
+  });
+  salvarCaixa(caixa);
+}
+
+// 🔄 Processar fila automaticamente (a cada 5 minutos)
+function processarFilaAutomaticamente() {
+  const fila = lerFila();
+  const usuarios = lerUsuarios();
+  const giros = lerGiros();
+
+  for (let nivel = 2; nivel <= 5; nivel++) {
+    const filaNivel = fila[nivel];
+    if (filaNivel && filaNivel.length > 0) {
+      const primeiro = filaNivel.shift();
+      const user = usuarios.find(u => u.usuario === primeiro.usuario);
+
+      if (user) {
+        const giroAtual = giros.find(g => g.nivel === user.nivel);
+        if (giroAtual) {
+          const valorRetido = giroAtual.valor * 0.1;
+          registrarRetencao(valorRetido, `Retenção Giro ${user.nivel} - ${user.usuario}`);
+
+          user.nivel += 1;
+          user.ultimo_giro = new Date().toISOString().split('T')[0];
+          console.log(`✅ ${user.usuario} avançou para o Giro ${user.nivel}`);
+        }
+      }
+    }
+  }
+
+  salvarFila(fila);
+  salvarUsuarios(usuarios);
+}
+
+// Executar a cada 5 minutos (300000 ms)
+setInterval(processarFilaAutomaticamente, 300000); // 5 minutos
+processarFilaAutomaticamente(); // Executar agora na inicialização
+
+// 🌐 ROTAS
 
 // Rota: GET / → login.html
 app.get('/', (req, res) => {
@@ -128,7 +177,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Outras rotas...
 // Rota: POST /login
 app.post('/login', loginLimiter, (req, res) => {
   const { usuario, senha } = req.body;
@@ -191,29 +239,24 @@ app.post('/cadastrar', cadastroLimiter, async (req, res) => {
 
   const senhaHash = await bcrypt.hash(senha, 10);
   const avatar = `/man.jpeg`;
+  const novoUsuario = {
+    usuario,
+    senha: senhaHash,
+    nome,
+    sobre,
+    celular,
+    email,
+    patrocinador,
+    avatar,
+    nivel: 1,
+    data_cadastro: new Date().toISOString().split('T')[0]
+  };
 
-  const novoUsuario = { usuario, senha: senhaHash, nome, sobre, celular, email, patrocinador, avatar };
   usuarios.push(novoUsuario);
   salvarUsuarios(usuarios);
 
   res.redirect('/?cadastro=ok');
 });
-
-// Função: ler usuários
-function lerUsuarios() {
-  try {
-    const data = fs.readFileSync(path.join(__dirname, 'usuarios.json'), 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
-    console.error('Erro ao ler usuarios.json:', err);
-    return [];
-  }
-}
-
-// Função: salvar usuários
-function salvarUsuarios(usuarios) {
-  fs.writeFileSync(path.join(__dirname, 'usuarios.json'), JSON.stringify(usuarios, null, 2));
-}
 
 // Rota: GET /profile-ch.html
 app.get('/profile-ch.html', verificaLogin, (req, res) => {
@@ -223,6 +266,54 @@ app.get('/profile-ch.html', verificaLogin, (req, res) => {
 // Rota: GET /receipts.html
 app.get('/receipts.html', verificaLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'receipts.html'));
+});
+
+// ✅ Rota: GET /admin.html
+app.get('/admin.html', verificaLogin, (req, res) => {
+  const usuarios = lerUsuarios();
+  const user = usuarios.find(u => u.usuario === req.session.usuario);
+  if (user.usuario !== 'admin') {
+    return res.redirect('/index.html');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// ✅ Rota: GET /api/admin/filas
+app.get('/api/admin/filas', verificaLogin, (req, res) => {
+  const usuarios = lerUsuarios();
+  const user = usuarios.find(u => u.usuario === req.session.usuario);
+  if (user.usuario !== 'admin') {
+    return res.status(403).json({ erro: 'Acesso negado' });
+  }
+  res.json(lerFila());
+});
+
+// ✅ Rota: GET /api/admin/caixa
+app.get('/api/admin/caixa', verificaLogin, (req, res) => {
+  const usuarios = lerUsuarios();
+  const user = usuarios.find(u => u.usuario === req.session.usuario);
+  if (user.usuario !== 'admin') {
+    return res.status(403).json({ erro: 'Acesso negado' });
+  }
+  res.json(lerCaixa());
+});
+
+// ✅ Rota: GET /api/admin/exportar
+app.get('/api/admin/exportar', verificaLogin, (req, res) => {
+  const usuarios = lerUsuarios();
+  const user = usuarios.find(u => u.usuario === req.session.usuario);
+  if (user.usuario !== 'admin') {
+    return res.status(403).json({ erro: 'Acesso negado' });
+  }
+
+  let csv = 'ID,Nome,Email,Celular,Nível,Cadastro\n';
+  usuarios.forEach(u => {
+    csv += `${u.usuario},"${u.nome} ${u.sobre}",${u.email},${u.celular},${u.nivel},${u.data_cadastro}\n`;
+  });
+
+  res.header('Content-Type', 'text/csv');
+  res.header('Content-Disposition', 'attachment; filename=usuarios.csv');
+  res.send(csv);
 });
 
 // Rota: GET /api/usuario
@@ -236,108 +327,20 @@ app.get('/api/usuario', verificaLogin, (req, res) => {
       celular: user.celular,
       avatar: user.avatar,
       patrocinador: user.patrocinador,
-      usuario: user.usuario
+      usuario: user.usuario,
+      nivel: user.nivel
     });
   } else {
     res.status(404).json({ erro: 'Usuário não encontrado' });
   }
 });
 
-// Rota: POST /api/perfil
-app.post('/api/perfil', verificaLogin, (req, res) => {
-  const { nome, sobre, celular } = req.body;
-  const usuarios = lerUsuarios();
-  const user = usuarios.find(u => u.usuario === req.session.usuario);
-
-  if (user) {
-    user.nome = nome;
-    user.sobre = sobre;
-    user.celular = celular;
-    salvarUsuarios(usuarios);
-    res.json({ mensagem: 'Perfil atualizado!' });
-  } else {
-    res.status(404).json({ mensagem: 'Usuário não encontrado.' });
-  }
-});
-
-// Rota: POST /api/avatar
-app.post('/api/avatar', verificaLogin, (req, res) => {
-  const { avatar } = req.body;
-  const usuarios = lerUsuarios();
-  const user = usuarios.find(u => u.usuario === req.session.usuario);
-
-  if (user && avatar && (avatar.startsWith('man') || avatar.startsWith('woman'))) {
-    user.avatar = '/' + avatar;
-    salvarUsuarios(usuarios);
-    res.json({ mensagem: 'Avatar atualizado!' });
-  } else {
-    res.status(400).json({ mensagem: 'Avatar inválido.' });
-  }
-});
-
-// Rota: POST /api/senha
-app.post('/api/senha', verificaLogin, async (req, res) => {
-  const { atual, nova } = req.body;
-  const usuarios = lerUsuarios();
-  const user = usuarios.find(u => u.usuario === req.session.usuario);
-
-  if (!user) return res.json({ mensagem: 'Erro: usuário não encontrado.' });
-
-  if (!bcrypt.compareSync(atual, user.senha)) {
-    return res.json({ mensagem: 'Senha atual incorreta.' });
-  }
-
-  if (nova.length < 6 || !/\d/.test(nova) || !/[A-Z]/.test(nova)) {
-    return res.json({ mensagem: 'Nova senha fraca.' });
-  }
-
-  user.senha = await bcrypt.hash(nova, 10);
-  salvarUsuarios(usuarios);
-
-  res.json({ mensagem: 'Senha alterada com sucesso!' });
-});
-
-// Rota: GET /logout
-app.get('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/?sucesso=logout');
-  });
-});
-
-// Caminhos dos arquivos
-const GIROS_FILE = path.join(__dirname, 'giros.json');
-const FILA_FILE = path.join(__dirname, 'fila.json');
-
-// Função: ler giros
-function lerGiros() {
-  try {
-    return JSON.parse(fs.readFileSync(GIROS_FILE, 'utf-8'));
-  } catch (err) {
-    return [];
-  }
-}
-
-// Função: ler fila
-function lerFila() {
-  try {
-    return JSON.parse(fs.readFileSync(FILA_FILE, 'utf-8'));
-  } catch (err) {
-    return { "2": [], "3": [], "4": [], "5": [] };
-  }
-}
-
-// Função: salvar fila
-function salvarFila(fila) {
-  fs.writeFileSync(FILA_FILE, JSON.stringify(fila, null, 2));
-}
-
-// Rota: GET /giros → retorna os níveis
+// Rota: GET /api/giros
 app.get('/api/giros', verificaLogin, (req, res) => {
   const giros = lerGiros();
   const usuarios = lerUsuarios();
   const user = usuarios.find(u => u.usuario === req.session.usuario);
   const fila = lerFila();
-
   res.json({
     giros,
     nivelAtual: user?.nivel || 1,
@@ -361,12 +364,10 @@ app.post('/api/entrar-na-fila', verificaLogin, (req, res) => {
     return res.json({ erro: 'Nível inválido para fila' });
   }
 
-  // Verifica se já está na fila
   if (fila[nivel] && fila[nivel].some(u => u.usuario === user.usuario)) {
     return res.json({ erro: 'Você já está na fila deste nível' });
   }
 
-  // Adiciona na fila
   if (!fila[nivel]) fila[nivel] = [];
   fila[nivel].push({ usuario: user.usuario, data: new Date().toISOString().split('T')[0] });
   salvarFila(fila);
@@ -374,70 +375,12 @@ app.post('/api/entrar-na-fila', verificaLogin, (req, res) => {
   res.json({ mensagem: `Você entrou na fila do Giro ${nivel}!` });
 });
 
-// Rota: POST /processar-fila
-app.post('/api/processar-fila', verificaLogin, (req, res) => {
-  const { nivel } = req.body;
-  const usuarios = lerUsuarios();
-  const fila = lerFila();
-  const giros = lerGiros();
-  const admin = usuarios.find(u => u.usuario === req.session.usuario);
-
-  // Só admin pode processar (ou você pode automatizar)
-  if (admin.usuario !== 'admin') {
-    return res.json({ erro: 'Acesso negado' });
-  }
-
-  const filaNivel = fila[nivel];
-  if (!filaNivel || filaNivel.length === 0) {
-    return res.json({ erro: 'Fila vazia' });
-  }
-
-  const primeiro = filaNivel.shift();
-  const user = usuarios.find(u => u.usuario === primeiro.usuario);
-
-  if (user) {
-    user.nivel += 1; // Próximo nível
-    user.ultimo_giro = new Date().toISOString().split('T')[0];
-  }
-
-  salvarFila(fila);
-  salvarUsuarios(usuarios);
-
-  res.json({ mensagem: `Usuário ${primeiro.usuario} avançou para o próximo nível!` });
+// Rota: GET /logout
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/?sucesso=logout');
+  });
 });
-
-// Função: processar fila automaticamente
-function processarFilaAutomaticamente() {
-  const fila = lerFila();
-  const usuarios = lerUsuarios();
-  const giros = lerGiros();
-
-  for (let nivel = 2; nivel <= 5; nivel++) {
-    const filaNivel = fila[nivel];
-    if (filaNivel && filaNivel.length > 0) {
-      const primeiro = filaNivel.shift();
-      const user = usuarios.find(u => u.usuario === primeiro.usuario);
-
-      if (user) {
-        const giroAtual = giros.find(g => g.nivel === user.nivel);
-        if (giroAtual) {
-          user.nivel += 1;
-          user.ultimo_giro = new Date().toISOString().split('T')[0];
-          console.log(`✅ Usuário ${user.usuario} avançou para o Giro ${user.nivel}`);
-        }
-      }
-    }
-  }
-
-  salvarFila(fila);
-  salvarUsuarios(usuarios);
-}
-
-// Executar a cada 5 minutos (300000 ms)
-setInterval(processarFilaAutomaticamente, 300000); // 5 minutos
-
-// Executar agora na inicialização
-processarFilaAutomaticamente();
 
 // Inicia servidor
 app.listen(PORT, () => {

@@ -1,13 +1,14 @@
 [
   {
     "usuario": "admin",
-    "senha": "321455",
+    "senha": "$2b$10$6yYPTt/5zCVu5.pP59W5Te8.ebOvZyY8Y06o6y5Y8Y06o6y5Y8Y06o",
     "nome": "Admin",
-    "nivel": 2,
     "sobre": "System",
     "celular": "(67) 99921-4470",
     "email": "santyagomarine@hotmail.com",
     "patrocinador": "1",
-    "avatar": "/man.jpeg"
+    "avatar": "/man.jpeg",
+    "nivel": 1,
+    "data_cadastro": "2025-08-05"
   }
 ]
