@@ -92,7 +92,9 @@
         <a href="profile-ch.html"><i class="bi bi-person"></i> Editar Perfil</a>
         <a href="receipts.html"><i class="bi bi-file-earmark-text"></i> Comprovantes</a>
         <a href="#"><i class="bi bi-currency-dollar"></i> Doações</a>
-        <a href="/logout"><i class="bi bi-box-arrow-right text-danger"></i> Sair</a>
+        <a href="#" onclick="confirmarSair(event)" class="text-decoration-none">
+          <i class="bi bi-box-arrow-right text-danger"></i> Sair
+        </a>
       </nav>
 
       <!-- Main Content -->
@@ -165,26 +167,34 @@
 
   <!-- Scripts -->
   <script>
-     // Carregar dados do usuário
-  fetch('/api/usuario')
-    .then(r => {
-      if (r.redirected) {
-        // Se o servidor redirecionar (por falta de login), vá para o login
-        window.location.href = r.url;
-        return;
-      }
-      return r.json();
-    })
-    .then(data => {
-      if (data) {
-        document.getElementById('nomeUsuario').textContent = data.nome;
-      }
-    })
-    .catch(err => {
-      console.warn('Erro ao carregar usuário:', err);
-      window.location.href = '/?erro=1'; // Força redirecionamento limpo
-    });
+    // 🔒 Proteção: se o fetch falhar, não fique em loop
+    async function carregarUsuario() {
+      try {
+        const res = await fetch('/api/usuario', { 
+          method: 'GET', 
+          credentials: 'same-origin' 
+        });
 
+        if (!res.ok) {
+          throw new Error('Não autenticado');
+        }
+
+        const data = await res.json();
+        document.getElementById('nomeUsuario').textContent = data.nome;
+      } catch (err) {
+        console.warn('Usuário não autenticado ou erro na API:', err);
+        // Redireciona limpo, sem loop
+        window.location.href = '/?erro=1';
+      }
+    }
+
+    // Chama apenas uma vez
+    if (document.getElementById('nomeUsuario')) {
+      carregarUsuario();
+    }
+  </script>
+
+  <script>
     // Carregar nível e posição na fila
     fetch('/api/giros')
       .then(r => r.json())
@@ -264,6 +274,14 @@
         .catch(err => {
           alert('Erro ao entrar na fila. Tente novamente.');
         });
+    }
+
+    // ✅ Função: confirmar saída
+    function confirmarSair(event) {
+      event.preventDefault();
+      if (confirm('Tem certeza que deseja sair?')) {
+        window.location.href = '/logout';
+      }
     }
   </script>
 

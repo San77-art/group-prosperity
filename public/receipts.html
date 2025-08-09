@@ -38,16 +38,13 @@
 </head>
 <body>
 
-  <!-- Proteção: Verifica login ao carregar a página -->
+  <!-- 🔒 Proteção: Verifica login ao carregar a página -->
   <script>
     fetch('/api/usuario', { method: 'GET', credentials: 'same-origin' })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Não autenticado');
-        }
+      .then(r => {
+        if (!r.ok) throw new Error('Não autenticado');
       })
-      .catch(err => {
-        console.warn('Usuário não autenticado, redirecionando...');
+      .catch(() => {
         window.location.href = '/?erro=1';
       });
   </script>

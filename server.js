@@ -8,6 +8,8 @@ const path = require('path');
 const axios = require('axios');
 
 const app = express();
+
+// ✅ Porta dinâmica (crucial para o Render.com)
 const PORT = process.env.PORT || 3000;
 
 // Caminhos dos arquivos
@@ -15,11 +17,16 @@ const USUARIOS_FILE = path.join(__dirname, 'usuarios.json');
 const FILA_FILE = path.join(__dirname, 'fila.json');
 const GIROS_FILE = path.join(__dirname, 'giros.json');
 const CAIXA_FILE = path.join(__dirname, 'caixa.json');
+const COMPROVANTES_FILE = path.join(__dirname, 'comprovantes.json'); // Novo arquivo
 const AVATARS_DIR = path.join(__dirname, 'public', 'avatars');
+const UPLOAD_DIR = path.join(__dirname, 'public', 'comprovantes'); // Pasta de uploads
 
 // Cria pastas se não existirem
 if (!fs.existsSync(AVATARS_DIR)) {
   fs.mkdirSync(AVATARS_DIR, { recursive: true });
+}
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
 // Middleware
@@ -109,12 +116,25 @@ function registrarRetencao(valor, descricao = '') {
   const caixa = lerCaixa();
   caixa.totalRetido += valor;
   caixa.movimentacoes.push({
-    data: new Date().toISOString().split('T')[0],
+    data : new Date().toISOString().split('T')[0],
     valor,
     tipo: 'retencao',
     descricao
   });
   salvarCaixa(caixa);
+}
+
+// ✅ Comprovantes
+function lerComprovantes() {
+  try {
+    return JSON.parse(fs.readFileSync(COMPROVANTES_FILE, 'utf-8'));
+  } catch (err) {
+    return [];
+  }
+}
+
+function salvarComprovantes(comprovantes) {
+  fs.writeFileSync(COMPROVANTES_FILE, JSON.stringify(comprovantes, null, 2));
 }
 
 // 🔄 Processar fila automaticamente (a cada 5 minutos)
@@ -151,25 +171,40 @@ function processarFilaAutomaticamente() {
 setInterval(processarFilaAutomaticamente, 300000); // 5 minutos
 processarFilaAutomaticamente(); // Executar agora na inicialização
 
+// 📦 Multer para upload de imagens
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${req.session.usuario}-${Date.now()}${ext}`);
+  }
+});
+const upload = multer({ storage });
+
 // 🌐 ROTAS
 
-// ✅ Rota: GET / → login.html (com redirecionamento automático)
+// ✅ Rota: GET / → login.html (versão corrigida)
 app.get('/', (req, res) => {
-  // Se já estiver logado, vai direto para o painel
   if (req.session.usuario) {
     return res.redirect('/index.html');
   }
 
-  // Se não estiver logado, mostra a página de login
-  const params = new URLSearchParams(req.url.split('?')[1] || '');
-  const erro = params.get('erro');
-  const sucesso = params.get('sucesso');
-  const cadastro = params.get('cadastro');
-
-  fs.readFile(path.join(__dirname, 'public', 'login.html'), 'utf8', (err, data) => {
-    if (err) return res.status(500).send('Erro ao carregar página.');
+  const filePath = path.join(__dirname, 'public', 'login.html');
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Erro ao ler login.html:', err);
+      return res.status(500).send('Erro ao carregar página.');
+    }
 
     let html = data;
+    const urlParams = new URLSearchParams(req.url.split('?')[1] || '');
+    const erro = urlParams.get('erro');
+    const sucesso = urlParams.get('sucesso');
+    const cadastro = urlParams.get('cadastro');
 
     if (cadastro === 'ok') {
       html = html.replace('<!-- MENSAGEM -->', '<div class="alert alert-success">Cadastro realizado! Faça login abaixo.</div>');
@@ -278,8 +313,8 @@ app.get('/receipts.html', verificaLogin, (req, res) => {
 app.get('/admin.html', verificaLogin, (req, res) => {
   const usuarios = lerUsuarios();
   const user = usuarios.find(u => u.usuario === req.session.usuario);
-  if (user.usuario !== 'admin') {
-    return res.redirect('/index.html');
+  if (user?.usuario !== 'admin') {
+    return res.redirect('/?erro=1');
   }
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
@@ -288,7 +323,7 @@ app.get('/admin.html', verificaLogin, (req, res) => {
 app.get('/api/admin/filas', verificaLogin, (req, res) => {
   const usuarios = lerUsuarios();
   const user = usuarios.find(u => u.usuario === req.session.usuario);
-  if (user.usuario !== 'admin') {
+  if (user?.usuario !== 'admin') {
     return res.status(403).json({ erro: 'Acesso negado' });
   }
   res.json(lerFila());
@@ -298,7 +333,7 @@ app.get('/api/admin/filas', verificaLogin, (req, res) => {
 app.get('/api/admin/caixa', verificaLogin, (req, res) => {
   const usuarios = lerUsuarios();
   const user = usuarios.find(u => u.usuario === req.session.usuario);
-  if (user.usuario !== 'admin') {
+  if (user?.usuario !== 'admin') {
     return res.status(403).json({ erro: 'Acesso negado' });
   }
   res.json(lerCaixa());
@@ -308,7 +343,7 @@ app.get('/api/admin/caixa', verificaLogin, (req, res) => {
 app.get('/api/admin/exportar', verificaLogin, (req, res) => {
   const usuarios = lerUsuarios();
   const user = usuarios.find(u => u.usuario === req.session.usuario);
-  if (user.usuario !== 'admin') {
+  if (user?.usuario !== 'admin') {
     return res.status(403).json({ erro: 'Acesso negado' });
   }
 
@@ -375,10 +410,48 @@ app.post('/api/entrar-na-fila', verificaLogin, (req, res) => {
   }
 
   if (!fila[nivel]) fila[nivel] = [];
-  fila[nivel].push({ usuario: user.usuario, data: new Date().toISOString().split('T')[0] });
+  fila[nivel].push({ 
+    usuario: user.usuario, 
+    data : new Date().toISOString().split('T')[0] 
+  });
   salvarFila(fila);
 
   res.json({ mensagem: `Você entrou na fila do Giro ${nivel}!` });
+});
+
+// ✅ Rota: POST /api/comprovantes (upload)
+app.post('/api/comprovantes', verificaLogin, upload.single('imagem'), (req, res) => {
+  const { tipo, valor } = req.body;
+  const imagem = req.file ? `/comprovantes/${req.file.filename}` : null;
+
+  if (!imagem) {
+    return res.json({ erro: 'Imagem obrigatória' });
+  }
+
+  const usuarios = lerUsuarios();
+  const user = usuarios.find(u => u.usuario === req.session.usuario);
+  if (!user) return res.status(404).json({ erro: 'Usuário não encontrado' });
+
+  const comprovantes = lerComprovantes();
+  comprovantes.push({
+    usuario: user.usuario,
+    tipo,
+    valor,
+    imagem,
+    data: new Date().toISOString().split('T')[0],
+    status: 'Pendente'
+  });
+
+  salvarComprovantes(comprovantes);
+  res.json({ mensagem: 'Comprovante enviado com sucesso!' });
+});
+
+// ✅ Rota: GET /api/comprovantes
+app.get('/api/comprovantes', verificaLogin, (req, res) => {
+  const comprovantes = lerComprovantes();
+  const usuario = req.session.usuario;
+  const meus = comprovantes.filter(c => c.usuario === usuario);
+  res.json(meus);
 });
 
 // Rota: GET /logout
