@@ -32,7 +32,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'MeuSistemaSeguro123!@#',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 30 * 60 * 1000 } // 2 Horas
+  cookie: { maxAge: 2 * 60 * 60 * 1000 } // 2 Horas
 }));
 
 // 🔐 Middleware: verificar login
@@ -153,8 +153,14 @@ processarFilaAutomaticamente(); // Executar agora na inicialização
 
 // 🌐 ROTAS
 
-// Rota: GET / → login.html
+// ✅ Rota: GET / → login.html (com redirecionamento automático)
 app.get('/', (req, res) => {
+  // Se já estiver logado, vai direto para o painel
+  if (req.session.usuario) {
+    return res.redirect('/index.html');
+  }
+
+  // Se não estiver logado, mostra a página de login
   const params = new URLSearchParams(req.url.split('?')[1] || '');
   const erro = params.get('erro');
   const sucesso = params.get('sucesso');
