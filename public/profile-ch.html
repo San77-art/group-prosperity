@@ -37,6 +37,7 @@
 <body>
 
   <!-- 🔒 Proteção: Verifica login antes de carregar a página -->
+  <!-- (único script necessário - evita duplicação) -->
   <script>
     fetch('/api/usuario', { method: 'GET', credentials: 'same-origin' })
       .then(r => {

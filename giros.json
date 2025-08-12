@@ -2,36 +2,36 @@
   {
     "nivel": 1,
     "valor": 20,
-    "recebe": 0,
-    "retido": 20,
-    "descricao": "Giro Inicial (retenção total)"
+    "paraProximo": 0,
+    "paraSistema": 20,
+    "descricao": "Giro Inicial: Doação retida para formar a matriz"
   },
   {
     "nivel": 2,
     "valor": 20,
-    "recebe": 18,
-    "retido": 2,
-    "descricao": "Giro 2 - Recebe US$18"
+    "paraProximo": 18,
+    "paraSistema": 2,
+    "descricao": "Giro 2 - Recebe US$18 do próximo"
   },
   {
     "nivel": 3,
     "valor": 50,
-    "recebe": 45,
-    "retido": 5,
-    "descricao": "Giro 3 - Recebe US$45"
+    "paraProximo": 45,
+    "paraSistema": 5,
+    "descricao": "Giro 3 - Recebe US$45 do próximo"
   },
   {
     "nivel": 4,
     "valor": 100,
-    "recebe": 90,
-    "retido": 10,
-    "descricao": "Giro 4 - Recebe US$90"
+    "paraProximo": 90,
+    "paraSistema": 10,
+    "descricao": "Giro 4 - Recebe US$90 do próximo"
   },
   {
     "nivel": 5,
     "valor": 200,
-    "recebe": 180,
-    "retido": 20,
-    "descricao": "Giro 5 - Recebe US$180"
+    "paraProximo": 180,
+    "paraSistema": 20,
+    "descricao": "Giro 5 - Recebe US$180 do próximo"
   }
 ]

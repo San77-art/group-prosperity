@@ -70,6 +70,14 @@
       padding: 8px;
       font-size: 0.9rem;
     }
+    /* Código da carteira */
+    code {
+      background-color: #e9ecef;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
@@ -91,9 +99,9 @@
         <a href="new-account.html"><i class="bi bi-person-plus"></i> Novo Cadastro</a>
         <a href="profile-ch.html"><i class="bi bi-person"></i> Editar Perfil</a>
         <a href="receipts.html"><i class="bi bi-currency-dollar"></i> Doações</a>
-        <a href="#" onclick="confirmarSair(event)" class="text-decoration-none">
-          <i class="bi bi-box-arrow-right text-danger"></i> Sair
-        </a>
+       <a href="#" onclick="confirmarSair(event)" class="text-decoration-none">
+  <i class="bi bi-box-arrow-right text-danger"></i> Sair
+</a>
       </nav>
 
       <!-- Main Content -->
@@ -156,6 +164,25 @@
               <div id="proximoPagamento">
                 <p class="text-muted">Carregando...</p>
               </div>
+              <div class="mt-3 p-2 bg-light border rounded">
+                <small>
+                  <strong>Regra do Sistema:</strong><br>
+                  - 90% da doação vai para o próximo da fila<br>
+                  - 10% é retido para manutenção (USDT/Polygon)<br>
+                  - Carteira: <code>0x7ed...8789</code>
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carteira do Sistema (10%) -->
+          <div class="col-md-6">
+            <div class="card shadow-sm text-center p-3">
+              <div class="card-icon text-info"><i class="bi bi-wallet"></i></div>
+              <div class="card-title">Carteira do Sistema (10%)</div>
+              <p><strong>USDT na rede Polygon</strong></p>
+              <code>0x7ed5449fC0C22dDae84Fed6e3F6BbA68082b8789</code>
+              <small class="text-muted">Sempre envie 10% para esta carteira ao doar.</small>
             </div>
           </div>
 
@@ -277,11 +304,12 @@
 
     // ✅ Função: confirmar saída
     function confirmarSair(event) {
-      event.preventDefault();
-      if (confirm('Tem certeza que deseja sair?')) {
-        window.location.href = '/logout';
-      }
-    }
+  event.preventDefault();
+  if (confirm('Tem certeza que deseja sair?')) {
+    // Redireciona para a rota de logout
+    window.location.href = '/logout';
+  }
+}
   </script>
 
   <!-- Bootstrap JS -->

@@ -189,11 +189,14 @@ const upload = multer({ storage });
 
 // ✅ Rota: GET / → login.html (versão corrigida)
 app.get('/', (req, res) => {
+  // Se já estiver logado, vai para o painel
   if (req.session.usuario) {
     return res.redirect('/index.html');
   }
 
+  // Caminho do login.html
   const filePath = path.join(__dirname, 'public', 'login.html');
+
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err) {
       console.error('Erro ao ler login.html:', err);
@@ -460,7 +463,6 @@ app.get('/logout', (req, res) => {
     res.redirect('/?sucesso=logout');
   });
 });
-
 // Inicia servidor
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`);

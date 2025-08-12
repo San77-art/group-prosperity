@@ -61,19 +61,20 @@
             <div class="table-responsive">
               <table class="table table-striped">
                 <thead>
-                  <tr>
-                    <th>Participante</th>
-                    <th>Comprovante</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                    <th>Data</th>
-                    <th>Status</th>
-                    <th>Ação</th>
-                  </tr>
-                </thead>
+  <tr>
+    <th>Participante</th>
+    <th>Comprovante</th>
+    <th>Tipo</th>
+    <th>Total</th>
+    <th>Para Próximo (90%)</th>
+    <th>Para Sistema (10%)</th>
+    <th>Data</th>
+    <th>Status</th>
+  </tr>
+</thead>
                 <tbody id="enviados">
                   <tr>
-                    <td colspan="7" class="text-center text-muted">Carregando comprovantes...</td>
+                    <td colspan="9" class="text-center text-muted">Carregando comprovantes...</td>
                   </tr>
                 </tbody>
               </table>
@@ -96,8 +97,8 @@
                 </select>
               </div>
               <div class="mb-3">
-                <label class="form-label">Valor (US$)</label>
-                <input type="text" class="form-control" id="valor" placeholder="Ex: 20,00" required>
+                <label class="form-label">Valor (R$)</label>
+                <input type="text" class="form-control" id="valor" placeholder="Ex: 80,00" required>
               </div>
               <button type="submit" class="btn btn-warning">Enviar Comprovante</button>
             </form>
@@ -142,7 +143,7 @@
         const tbody = document.getElementById('enviados');
         tbody.innerHTML = '';
         if (comprovantes.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum comprovante enviado.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Nenhum comprovante enviado.</td></tr>';
           return;
         }
         comprovantes.forEach(c => {
@@ -164,6 +165,8 @@
             </td>
             <td><span class="badge bg-info">${c.tipo}</span></td>
             <td>R$ ${c.valor}</td>
+            <td>R$ ${(c.valor * 0.9).toFixed(2)}</td>
+            <td>R$ ${(c.valor * 0.1).toFixed(2)}</td>
             <td>${c.data}</td>
             <td><span class="status-badge bg-pending">${c.status}</span></td>
             <td>-</td>
@@ -173,7 +176,7 @@
       })
       .catch(err => {
         console.error('Erro ao carregar comprovantes:', err);
-        document.getElementById('enviados').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar comprovantes.</td></tr>';
+        document.getElementById('enviados').innerHTML = '<tr><td colspan="9" class="text-center text-danger">Erro ao carregar comprovantes.</td></tr>';
       });
 
     // Função: ver comprovante
