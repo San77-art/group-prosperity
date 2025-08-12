@@ -9,7 +9,7 @@ const axios = require('axios');
 
 const app = express();
 
-// ✅ Porta dinâmica (crucial para o Render.com)
+// ✅ Porta dinâmica (obrigatória no Render.com)
 const PORT = process.env.PORT || 3000;
 
 // Caminhos dos arquivos
@@ -17,9 +17,9 @@ const USUARIOS_FILE = path.join(__dirname, 'usuarios.json');
 const FILA_FILE = path.join(__dirname, 'fila.json');
 const GIROS_FILE = path.join(__dirname, 'giros.json');
 const CAIXA_FILE = path.join(__dirname, 'caixa.json');
-const COMPROVANTES_FILE = path.join(__dirname, 'comprovantes.json'); // Novo arquivo
+const COMPROVANTES_FILE = path.join(__dirname, 'comprovantes.json');
 const AVATARS_DIR = path.join(__dirname, 'public', 'avatars');
-const UPLOAD_DIR = path.join(__dirname, 'public', 'comprovantes'); // Pasta de uploads
+const UPLOAD_DIR = path.join(__dirname, 'public', 'comprovantes');
 
 // Cria pastas se não existirem
 if (!fs.existsSync(AVATARS_DIR)) {
@@ -39,7 +39,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'MeuSistemaSeguro123!@#',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 2 * 60 * 60 * 1000 } // 2 Horas
+  cookie: { 
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    secure: process.env.NODE_ENV === 'production', // Apenas HTTPS no Render
+    httpOnly: true
+  }
 }));
 
 // 🔐 Middleware: verificar login
@@ -65,7 +69,6 @@ const cadastroLimiter = rateLimit({
 });
 
 // 📂 Funções de leitura e salvamento
-
 function lerUsuarios() {
   try {
     return JSON.parse(fs.readFileSync(USUARIOS_FILE, 'utf-8'));
@@ -112,16 +115,48 @@ function salvarCaixa(caixa) {
   fs.writeFileSync(CAIXA_FILE, JSON.stringify(caixa, null, 2));
 }
 
-function registrarRetencao(valor, descricao = '') {
+// 📬 WhatsApp (Z-API)
+const ZAPI_TOKEN = process.env.ZAPI_TOKEN || 'SEU_TOKEN_AQUI';
+const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE || 'SEU_ID';
+const ZAPI_URL = `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`;
+
+async function enviarWhatsApp(numero, mensagem) {
+  try {
+    await axios.post(ZAPI_URL, {
+      phone: numero,
+      message: mensagem
+    });
+    console.log(`✅ WhatsApp enviado para ${numero}`);
+  } catch (err) {
+    console.error('Erro ao enviar WhatsApp:', err.response?.data || err.message);
+  }
+}
+
+// Função: registrar retenção + notificar
+function registrarRetencao(valor, descricao = '', celularDono = null) {
   const caixa = lerCaixa();
   caixa.totalRetido += valor;
   caixa.movimentacoes.push({
-    data : new Date().toISOString().split('T')[0],
+    data: new Date().toISOString().split('T')[0],
     valor,
     tipo: 'retencao',
     descricao
   });
   salvarCaixa(caixa);
+
+  // ✅ Enviar WhatsApp ao dono
+  if (celularDono) {
+    const mensagem = `
+🚨 *NOVA RETENÇÃO REGISTRADA* 🚨
+
+*Valor:* R$ ${valor.toFixed(2)}
+*Descrição:* ${descricao}
+*Total Retido:* R$ ${caixa.totalRetido.toFixed(2)}
+
+O sistema está funcionando!
+    `.trim();
+    enviarWhatsApp(celularDono, mensagem);
+  }
 }
 
 // ✅ Comprovantes
@@ -153,8 +188,9 @@ function processarFilaAutomaticamente() {
         const giroAtual = giros.find(g => g.nivel === user.nivel);
         if (giroAtual) {
           const valorRetido = giroAtual.valor * 0.1;
-          registrarRetencao(valorRetido, `Retenção Giro ${user.nivel} - ${user.usuario}`);
-
+          // Passar o celular do dono para receber o WhatsApp
+          registrarRetencao(valorRetido, `Retenção Giro ${user.nivel} - ${user.usuario}`, '5569993051976');
+          
           user.nivel += 1;
           user.ultimo_giro = new Date().toISOString().split('T')[0];
           console.log(`✅ ${user.usuario} avançou para o Giro ${user.nivel}`);
@@ -187,16 +223,13 @@ const upload = multer({ storage });
 
 // 🌐 ROTAS
 
-// ✅ Rota: GET / → login.html (versão corrigida)
+// ✅ Rota: GET / → login.html (primeira página que todos veem)
 app.get('/', (req, res) => {
-  // Se já estiver logado, vai para o painel
   if (req.session.usuario) {
     return res.redirect('/index.html');
   }
 
-  // Caminho do login.html
   const filePath = path.join(__dirname, 'public', 'login.html');
-
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err) {
       console.error('Erro ao ler login.html:', err);
@@ -415,7 +448,7 @@ app.post('/api/entrar-na-fila', verificaLogin, (req, res) => {
   if (!fila[nivel]) fila[nivel] = [];
   fila[nivel].push({ 
     usuario: user.usuario, 
-    data : new Date().toISOString().split('T')[0] 
+    data: new Date().toISOString().split('T')[0]
   });
   salvarFila(fila);
 
@@ -459,10 +492,14 @@ app.get('/api/comprovantes', verificaLogin, (req, res) => {
 
 // Rota: GET /logout
 app.get('/logout', (req, res) => {
-  req.session.destroy(() => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Erro ao destruir sessão:', err);
+    }
     res.redirect('/?sucesso=logout');
   });
 });
+
 // Inicia servidor
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
