@@ -115,7 +115,7 @@ function salvarCaixa(caixa) {
   fs.writeFileSync(CAIXA_FILE, JSON.stringify(caixa, null, 2));
 }
 
-// 📬 WhatsApp (Z-API)
+// 📬 WhatsApp (Z-API) - URL CORRIGIDA (SEM ESPAÇO)
 const ZAPI_TOKEN = process.env.ZAPI_TOKEN || 'SEU_TOKEN_AQUI';
 const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE || 'SEU_ID';
 const ZAPI_URL = `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`;
@@ -474,7 +474,7 @@ app.post('/api/comprovantes', verificaLogin, upload.single('imagem'), (req, res)
     tipo,
     valor,
     imagem,
-    data :  new Date().toISOString().split('T')[0],
+    data : new Date().toISOString().split('T')[0],
     status: 'Pendente'
   });
 
