@@ -88,15 +88,19 @@
 
   <!-- 🔒 Proteção: Verifica login antes de carregar -->
   <script>
-    fetch('/api/usuario', { method: 'GET', credentials: 'same-origin' })
-      .then(r => {
-        if (!r.ok) throw new Error('Não autenticado');
-      })
-      .catch(() => {
-        if (window.location.pathname !== '/login.html') {
-          window.location.href = '/?erro=1';
-        }
-      });
+    fetch('/api/usuario', { 
+      method: 'GET', 
+      credentials: 'same-origin' 
+    })
+    .then(r => {
+      if (!r.ok) throw new Error('Não autenticado');
+    })
+    .catch(() => {
+      // Evita loop infinito
+      if (window.location.pathname !== '/login.html') {
+        window.location.href = '/?erro=1';
+      }
+    });
   </script>
 
   <div class="container-fluid">
@@ -289,19 +293,30 @@
 
   <!-- Script Principal -->
   <script>
-    // Dados do usuário
-    let usuario = null;
-
     // Carregar dados do usuário
     fetch('/api/usuario')
       .then(r => r.json())
       .then(data => {
-        usuario = data;
-
         // Preencher campos
         document.getElementById('nome').value = data.nome?.split(' ')[0] || '';
         document.getElementById('sobre').value = data.nome?.split(' ').slice(1).join(' ') || '';
         document.getElementById('celular').value = data.celular || '';
+
+        // Atualizar avatar
+        const avatarSrc = data.avatar || '/man.jpeg';
+        document.getElementById('profileAvatar').src = avatarSrc;
+        document.getElementById('sidebarAvatar').src = avatarSrc;
+
+        // Selecionar avatar atual
+        document.querySelectorAll('.avatar-option').forEach(img => {
+          if (img.src.includes(avatarSrc.replace('/', ''))) {
+            img.classList.add('selected');
+          } else {
+            img.classList.remove('selected');
+          }
+        });
+
+        // Preencher outros campos
         document.getElementById('emailUsuario').value = data.email || '';
         document.getElementById('loginUsuario').textContent = data.usuario || '';
         document.getElementById('nomeCompleto').textContent = data.nome || '';
@@ -316,22 +331,9 @@
         const diffTime = Math.abs(hoje - dataCadastro);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         document.getElementById('diasCadastro').textContent = diffDays;
-
-        // Avatar
-        const avatarSrc = data.avatar || '/man.jpeg';
-        document.getElementById('profileAvatar').src = avatarSrc;
-        document.getElementById('sidebarAvatar').src = avatarSrc;
-
-        // Selecionar avatar
-        document.querySelectorAll('.avatar-option').forEach(img => {
-          if (img.src.includes(avatarSrc.replace('/', ''))) {
-            img.classList.add('selected');
-          } else {
-            img.classList.remove('selected');
-          }
-        });
       })
-      .catch(() => {
+      .catch(err => {
+        console.error('Erro ao carregar usuário:', err);
         window.location.href = '/?erro=1';
       });
 
