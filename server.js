@@ -41,7 +41,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: { 
     maxAge: 24 * 60 * 60 * 1000, // 24 horas
-    secure: process.env.NODE_ENV === 'production', // Apenas HTTPS no Render
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true
   }
 }));
@@ -137,7 +137,7 @@ function registrarRetencao(valor, descricao = '', celularDono = null) {
   const caixa = lerCaixa();
   caixa.totalRetido += valor;
   caixa.movimentacoes.push({
-    data: new Date().toISOString().split('T')[0],
+    data : new Date().toISOString().split('T')[0],
     valor,
     tipo: 'retencao',
     descricao
@@ -223,7 +223,7 @@ const upload = multer({ storage });
 
 // 🌐 ROTAS
 
-// ✅ Rota: GET / → login.html (primeira página que todos veem)
+// ✅ Rota: GET / → login.html (única porta de entrada)
 app.get('/', (req, res) => {
   if (req.session.usuario) {
     return res.redirect('/index.html');
@@ -448,7 +448,7 @@ app.post('/api/entrar-na-fila', verificaLogin, (req, res) => {
   if (!fila[nivel]) fila[nivel] = [];
   fila[nivel].push({ 
     usuario: user.usuario, 
-    data: new Date().toISOString().split('T')[0]
+    data : new Date().toISOString().split('T')[0]
   });
   salvarFila(fila);
 
@@ -474,7 +474,7 @@ app.post('/api/comprovantes', verificaLogin, upload.single('imagem'), (req, res)
     tipo,
     valor,
     imagem,
-    data: new Date().toISOString().split('T')[0],
+    data :  new Date().toISOString().split('T')[0],
     status: 'Pendente'
   });
 
@@ -492,10 +492,7 @@ app.get('/api/comprovantes', verificaLogin, (req, res) => {
 
 // Rota: GET /logout
 app.get('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      console.error('Erro ao destruir sessão:', err);
-    }
+  req.session.destroy(() => {
     res.redirect('/?sucesso=logout');
   });
 });
