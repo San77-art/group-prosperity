@@ -7,17 +7,62 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
     body {
-      background-color: #f8f9fa;
+      background-color: #f0f2f5;
       font-family: 'Inter', sans-serif;
+      color: #333;
     }
-    .card {
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    .sidebar {
+      background: linear-gradient(180deg, #401bc5, #2a1282);
+      color: white;
+      min-height: 100vh;
+      box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+    }
+    .sidebar .nav-link {
+      color: rgba(255,255,255,0.8);
+      border-radius: 8px;
+      margin: 6px 10px;
+      padding: 10px 15px;
+      transition: all 0.3s;
+    }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+      background-color: rgba(255,255,255,0.15);
+      color: white;
+    }
+    .sidebar .nav-link i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+    .profile-card {
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .user-status {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 16px;
+      height: 16px;
+      background-color: #28a745;
+      border: 2px solid white;
+      border-radius: 50%;
+    }
+    footer {
+      margin-top: 60px;
+    }
+    .tab-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     .avatar-option {
       cursor: pointer;
@@ -29,119 +74,220 @@
       border-color: #401bc5;
       transform: scale(1.05);
     }
-    footer {
-      margin-top: 60px;
+    .alert-link {
+      color: #d63384;
+      font-weight: 600;
+    }
+    .alert-link:hover {
+      color: #a62768;
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
 
-  <!-- 🔒 Proteção: Verifica login antes de carregar a página -->
-  <!-- (único script necessário - evita duplicação) -->
+  <!-- 🔒 Proteção: Verifica login antes de carregar -->
   <script>
     fetch('/api/usuario', { method: 'GET', credentials: 'same-origin' })
       .then(r => {
         if (!r.ok) throw new Error('Não autenticado');
       })
       .catch(() => {
-        window.location.href = '/?erro=1';
+        if (window.location.pathname !== '/login.html') {
+          window.location.href = '/?erro=1';
+        }
       });
   </script>
 
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-lg-10">
-        <div class="card mb-4">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-person me-2"></i> Editar Perfil</h5>
+  <div class="container-fluid">
+    <div class="row">
+
+      <!-- Sidebar -->
+      <nav class="col-md-3 col-lg-2 d-md-block sidebar p-0">
+        <div class="text-center py-4">
+          <img src="https://via.placeholder.com/150x50?text=Evoluir+Show" class="img-fluid" alt="Logo Evoluir Show" />
+        </div>
+
+        <!-- Perfil do usuário -->
+        <div class="text-center mb-4 px-3">
+          <div class="position-relative d-inline-block">
+            <img id="sidebarAvatar" src="https://placehold.co/80x80?text=U" class="rounded-circle" width="80">
+            <div class="user-status"></div>
           </div>
-          <div class="card-body">
-            <form id="formPerfil">
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Nome</label>
-                  <input type="text" class="form-control" id="nome" required>
+          <h6 class="mt-2 mb-0" id="sidebarNome">Carregando...</h6>
+          <small class="text-white-50">ID: <span id="sidebarID">--</span></small>
+        </div>
+
+        <ul class="nav flex-column px-3 py-4">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html"><i class="fas fa-home"></i> Início</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="new-account.html"><i class="fas fa-user-plus"></i> Novo Cadastro</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="#"><i class="fas fa-user-edit"></i> Editar Perfil</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="receipts.html"><i class="fas fa-receipt"></i> Doações</a>
+          </li>
+          <li class="nav-item mt-3">
+            <a class="nav-link text-danger" href="#" onclick="confirmarSair(event)">
+              <i class="fas fa-sign-out-alt"></i> Sair
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+        
+        <!-- Alerta WhatsApp -->
+        <div class="alert alert-danger mb-4">
+          <strong>ATENÇÃO:</strong>
+          <a href="#" class="alert-link">Clique aqui para entrar em nosso GRUPO DO WHATSAPP.</a>
+        </div>
+        <div class="alert alert-danger mb-4">
+          <a href="#" class="alert-link">Link de convite: http://2niveis.evoluirshow.com.br/cadastro.php=66 - Seu ID para convite é: 66</a>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <div class="card profile-card h-100">
+              <div class="card-body text-center">
+                <div class="position-relative d-inline-block">
+                  <img id="profileAvatar" src="https://placehold.co/120x120?text=Avatar" class="rounded-circle mb-3" width="120">
+                  <div class="user-status"></div>
                 </div>
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Sobrenome</label>
-                  <input type="text" class="form-control" id="sobre" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Celular</label>
-                  <input type="text" class="form-control" id="celular" required>
+                <span class="badge bg-success mb-3">Ativo</span>
+                <div class="text-start">
+                  <p class="mb-1"><strong>Cadastrado em:</strong> <span id="dataCadastro">--/--/--</span></p>
+                  <p class="mb-1"><strong>Dias de Cadastro:</strong> <span id="diasCadastro">0</span></p>
+                  <p class="mb-1"><strong>Seu ID:</strong> <span id="usuarioID">--</span></p>
+                  <p class="mb-1"><strong>Login:</strong> <span id="loginUsuario">--</span></p>
+                  <p class="mb-1"><strong>Nome:</strong> <span id="nomeCompleto">--</span></p>
                 </div>
               </div>
-              <button type="submit" class="btn btn-success">Salvar Perfil</button>
-            </form>
+            </div>
+          </div>
+
+          <div class="col-md-8">
+            <!-- Tabs -->
+            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="perfil-tab" data-bs-toggle="tab" data-bs-target="#perfil" type="button" role="tab">Perfil</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="avatar-tab" data-bs-toggle="tab" data-bs-target="#avatar" type="button" role="tab">Mudar Avatar</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="senha-tab" data-bs-toggle="tab" data-bs-target="#senha" type="button" role="tab">Senha</button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="profileTabsContent">
+              <!-- Perfil Tab -->
+              <div class="tab-pane fade show active" id="perfil" role="tabpanel">
+                <form class="mt-4" id="formPerfil">
+                  <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">Nome</label>
+                    <div class="col-md-9">
+                      <input type="text" class="form-control" id="nome" required>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">Sobrenome</label>
+                    <div class="col-md-9">
+                      <input type="text" class="form-control" id="sobre" required>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">Celular</label>
+                    <div class="col-md-9">
+                      <input type="text" class="form-control" id="celular" required>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label class="col-md-3 col-form-label">Email</label>
+                    <div class="col-md-9">
+                      <input type="email" class="form-control" id="emailUsuario" disabled>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12 text-end">
+                      <button type="submit" class="btn btn-primary">Salvar Perfil</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Avatar Tab -->
+              <div class="tab-pane fade" id="avatar" role="tabpanel">
+                <div class="mt-4">
+                  <h5>Escolha seu Avatar</h5>
+                  <div class="row text-center mt-3">
+                    <div class="col-3">
+                      <img src="/man.jpeg" class="img-fluid avatar-option selected" data-value="man.jpeg" alt="Avatar 1">
+                    </div>
+                    <div class="col-3">
+                      <img src="/woman.jpeg" class="img-fluid avatar-option" data-value="woman.jpeg" alt="Avatar 2">
+                    </div>
+                    <div class="col-3">
+                      <img src="/man1.jpeg" class="img-fluid avatar-option" data-value="man1.jpeg" alt="Avatar 3">
+                    </div>
+                    <div class="col-3">
+                      <img src="/woman1.jpeg" class="img-fluid avatar-option" data-value="woman1.jpeg" alt="Avatar 4">
+                    </div>
+                  </div>
+                  <div class="text-center mt-4">
+                    <button id="salvarAvatar" class="btn btn-success">Salvar Avatar</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Senha Tab -->
+              <div class="tab-pane fade" id="senha" role="tabpanel">
+                <form class="mt-4" id="formSenha">
+                  <div class="mb-3">
+                    <label class="form-label">Senha Atual</label>
+                    <input type="password" class="form-control" id="senhaAtual" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Nova Senha</label>
+                    <input type="password" class="form-control" id="novaSenha" required>
+                    <div class="form-text text-muted">
+                      Mínimo 6 caracteres, com número e letra maiúscula.
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Confirmar Nova Senha</label>
+                    <input type="password" class="form-control" id="confirmaSenha" required>
+                  </div>
+                  <div class="text-end">
+                    <button type="submit" class="btn btn-danger">Alterar Senha</button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="card mb-4">
-          <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="bi bi-image me-2"></i> Escolher Avatar</h5>
-          </div>
-          <div class="card-body">
-            <div class="row text-center">
-              <div class="col-3">
-                <img src="/man.jpeg" class="img-fluid avatar-option selected" data-value="man.jpeg" alt="Avatar 1">
-              </div>
-              <div class="col-3">
-                <img src="/woman.jpeg" class="img-fluid avatar-option" data-value="woman.jpeg" alt="Avatar 2">
-              </div>
-              <div class="col-3">
-                <img src="/man1.jpeg" class="img-fluid avatar-option" data-value="man1.jpeg" alt="Avatar 3">
-              </div>
-              <div class="col-3">
-                <img src="/woman1.jpeg" class="img-fluid avatar-option" data-value="woman1.jpeg" alt="Avatar 4">
-              </div>
-            </div>
-            <div class="text-center mt-3">
-              <button id="salvarAvatar" class="btn btn-primary">Salvar Avatar</button>
+        <footer class="mt-5 text-center">
+          <div class="row">
+            <div class="col-12 text-center">
+              <p class="mb-0">&copy; 2025 Evoluir Show - 4 Níveis. Todos os direitos reservados.</p>
             </div>
           </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header bg-danger text-white">
-            <h5 class="mb-0"><i class="bi bi-lock me-2"></i> Alterar Senha</h5>
-          </div>
-          <div class="card-body">
-            <form id="formSenha">
-              <div class="mb-3">
-                <label class="form-label">Senha Atual</label>
-                <input type="password" class="form-control" id="senhaAtual" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Nova Senha</label>
-                <input type="password" class="form-control" id="novaSenha" required>
-                <div class="form-text text-muted">
-                  Mínimo 6 caracteres, com número e letra maiúscula.
-                </div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Confirmar Nova Senha</label>
-                <input type="password" class="form-control" id="confirmaSenha" required>
-              </div>
-              <button type="submit" class="btn btn-danger">Alterar Senha</button>
-            </form>
-          </div>
-        </div>
-      </div>
+        </footer>
+      </main>
     </div>
-
-    <footer class="mt-5 text-center">
-      <div class="row">
-        <div class="col-12 text-center">
-          <p class="mb-0">&copy; 2025 Evoluir Show - 4 Níveis. Todos os direitos reservados.</p>
-        </div>
-      </div>
-    </footer>
   </div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Script principal -->
+  <!-- Script Principal -->
   <script>
     // Dados do usuário
     let usuario = null;
@@ -152,23 +298,40 @@
       .then(data => {
         usuario = data;
 
-        // Preencher perfil
+        // Preencher campos
         document.getElementById('nome').value = data.nome?.split(' ')[0] || '';
         document.getElementById('sobre').value = data.nome?.split(' ').slice(1).join(' ') || '';
         document.getElementById('celular').value = data.celular || '';
+        document.getElementById('emailUsuario').value = data.email || '';
+        document.getElementById('loginUsuario').textContent = data.usuario || '';
+        document.getElementById('nomeCompleto').textContent = data.nome || '';
+        document.getElementById('dataCadastro').textContent = data.data_cadastro || '--/--/--';
+        document.getElementById('usuarioID').textContent = data.usuario?.slice(-2) || '66';
+        document.getElementById('sidebarID').textContent = data.usuario?.slice(-2) || '66';
+        document.getElementById('sidebarNome').textContent = data.nome || 'Usuário';
 
-        // Preencher avatar atual
-        const avatarAtual = data.avatar.replace('/', '');
+        // Calcular dias de cadastro
+        const dataCadastro = new Date(data.data_cadastro);
+        const hoje = new Date();
+        const diffTime = Math.abs(hoje - dataCadastro);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        document.getElementById('diasCadastro').textContent = diffDays;
+
+        // Avatar
+        const avatarSrc = data.avatar || '/man.jpeg';
+        document.getElementById('profileAvatar').src = avatarSrc;
+        document.getElementById('sidebarAvatar').src = avatarSrc;
+
+        // Selecionar avatar
         document.querySelectorAll('.avatar-option').forEach(img => {
-          if (img.dataset.value === avatarAtual) {
+          if (img.src.includes(avatarSrc.replace('/', ''))) {
             img.classList.add('selected');
           } else {
             img.classList.remove('selected');
           }
         });
       })
-      .catch(err => {
-        console.error('Erro ao carregar usuário:', err);
+      .catch(() => {
         window.location.href = '/?erro=1';
       });
 
@@ -186,11 +349,7 @@
         body: JSON.stringify(formData)
       });
       if (res.ok) {
-        alert('Perfil atualizado!');
-        // Atualiza o nome no sidebar (se estiver no mesmo domínio)
-        try {
-          parent.document.getElementById('nomeUsuario').textContent = `${formData.nome} ${formData.sobre}`;
-        } catch (e) {}
+        alert('Perfil atualizado com sucesso!');
       } else {
         alert('Erro ao atualizar perfil.');
       }
@@ -209,7 +368,7 @@
         const src = '/' + selected.dataset.value;
         document.getElementById('profileAvatar').src = src;
         document.getElementById('sidebarAvatar').src = src;
-        alert('Avatar atualizado!');
+        alert('Avatar atualizado com sucesso!');
       } else {
         alert('Erro ao atualizar avatar.');
       }
@@ -231,7 +390,11 @@
       const confirma = document.getElementById('confirmaSenha').value;
 
       if (nova !== confirma) {
-        return alert('Senhas não coincidem');
+        return alert('As senhas não coincidem');
+      }
+
+      if (nova.length < 6 || !/\d/.test(nova) || !/[A-Z]/.test(nova)) {
+        return alert('A nova senha deve ter no mínimo 6 caracteres, um número e uma letra maiúscula');
       }
 
       const res = await fetch('/api/senha', {
@@ -240,8 +403,16 @@
         body: JSON.stringify({ atual, nova })
       });
       const data = await res.json();
-      alert(data.mensagem);
+      alert(data.mensagem || 'Erro ao alterar senha');
     });
+
+    // Confirmar saída
+    function confirmarSair(event) {
+      event.preventDefault();
+      if (confirm('Tem certeza que deseja sair?')) {
+        window.location.href = '/logout';
+      }
+    }
   </script>
 </body>
 </html>
