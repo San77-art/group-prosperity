@@ -19,6 +19,12 @@
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
+    .status-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
     .status-badge.bg-pending {
       background-color: #ffc107;
       color: #000;
@@ -31,8 +37,35 @@
       background-color: #dc3545;
       color: white;
     }
+    .preview-img {
+      max-width: 100%;
+      max-height: 300px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .upload-area {
+      border: 2px dashed #ced4da;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      background-color: #f1f3f5;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .upload-area:hover {
+      border-color: #401bc5;
+      background-color: #e9e2f8;
+    }
     footer {
       margin-top: 60px;
+    }
+    .alert-info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -40,13 +73,19 @@
 
   <!-- 🔒 Proteção: Verifica login ao carregar a página -->
   <script>
-    fetch('/api/usuario', { method: 'GET', credentials: 'same-origin' })
-      .then(r => {
-        if (!r.ok) throw new Error('Não autenticado');
-      })
-      .catch(() => {
-        window.location.href = '/?erro=1';
-      });
+    (async () => {
+      try {
+        const res = await fetch('/api/usuario', { 
+          method: 'GET', 
+          credentials: 'same-origin' 
+        });
+        if (!res.ok) throw new Error('Não autenticado');
+      } catch (err) {
+        if (window.location.pathname !== '/login.html') {
+          window.location.href = '/?erro=1';
+        }
+      }
+    })();
   </script>
 
   <div class="container mt-5">
@@ -58,23 +97,32 @@
           </div>
           <div class="card-body">
             <p class="text-muted">Aqui estão seus comprovantes de doação enviados.</p>
+
+            <!-- Regra do sistema -->
+            <div class="alert alert-info mb-4">
+              <strong>📌 Regras do Sistema:</strong><br>
+              - 90% do valor vai para o próximo da fila<br>
+              - 10% é retido para manutenção em <strong>BNB Smart Chain (BEP20)</strong><br>
+              <code>0x8d29C6381AD1FD53c8f6dd4DCab6fc93539186a9</code>
+            </div>
+
             <div class="table-responsive">
               <table class="table table-striped">
                 <thead>
-  <tr>
-    <th>Participante</th>
-    <th>Comprovante</th>
-    <th>Tipo</th>
-    <th>Total</th>
-    <th>Para Próximo (90%)</th>
-    <th>Para Sistema (10%)</th>
-    <th>Data</th>
-    <th>Status</th>
-  </tr>
-</thead>
+                  <tr>
+                    <th>Usuário</th>
+                    <th>Comprovante</th>
+                    <th>Tipo</th>
+                    <th>Total</th>
+                    <th>Para Próximo (90%)</th>
+                    <th>Para Sistema (10%)</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
                 <tbody id="enviados">
                   <tr>
-                    <td colspan="9" class="text-center text-muted">Carregando comprovantes...</td>
+                    <td colspan="8" class="text-center text-muted">Carregando comprovantes...</td>
                   </tr>
                 </tbody>
               </table>
@@ -97,8 +145,18 @@
                 </select>
               </div>
               <div class="mb-3">
-                <label class="form-label">Valor (R$)</label>
+                <label class="form-label">Valor (US$)</label>
                 <input type="text" class="form-control" id="valor" placeholder="Ex: 80,00" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Anexar Comprovante (Imagem ou PDF)</label>
+                <div class="upload-area" onclick="document.getElementById('imagem').click()">
+                  <i class="bi bi-cloud-arrow-up" style="font-size: 40px; color: #401bc5;"></i>
+                  <p class="mb-0 mt-2">Clique para selecionar uma imagem ou PDF</p>
+                  <small class="text-muted">Suporta: JPG, PNG, GIF, PDF</small>
+                </div>
+                <input type="file" id="imagem" class="d-none" accept="image/*,application/pdf" required>
+                <div id="preview"></div>
               </div>
               <button type="submit" class="btn btn-warning">Enviar Comprovante</button>
             </form>
@@ -110,7 +168,7 @@
     <footer class="mt-5 text-center">
       <div class="row">
         <div class="col-12 text-center">
-          <p class="mb-0">&copy; 2025 Evoluir Show - 4 Níveis. Todos os direitos reservados.</p>
+          <p class="mb-0">&copy; 2025 GP - 4 Níveis. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
@@ -122,10 +180,11 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Comprovante de Doação</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body text-center">
-          <img id="modalImg" src="" class="img-fluid" alt="Comprovante">
+          <img id="modalImg" src="" class="img-fluid preview-img" alt="Comprovante">
+          <iframe id="modalPdf" src="" class="w-100" style="height: 500px; display: none;"></iframe>
         </div>
       </div>
     </div>
@@ -136,14 +195,39 @@
 
   <!-- Script principal -->
   <script>
+    // Preview da imagem ou PDF antes do envio
+    document.getElementById('imagem').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('preview');
+      preview.innerHTML = '';
+
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        if (file.type === 'application/pdf') {
+          preview.innerHTML = `
+            <p><strong>PDF selecionado:</strong> ${file.name}</p>
+            <embed src="${event.target.result}" type="application/pdf" width="100%" height="300px" />
+          `;
+        } else {
+          preview.innerHTML = `
+            <p><strong>Imagem:</strong> ${file.name}</p>
+            <img src="${event.target.result}" class="preview-img" />
+          `;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
     // Carregar comprovantes do usuário
-    fetch('/api/comprovantes')
+    fetch('/api/comprovantes', { credentials: 'same-origin' })
       .then(r => r.json())
       .then(comprovantes => {
         const tbody = document.getElementById('enviados');
         tbody.innerHTML = '';
         if (comprovantes.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Nenhum comprovante enviado.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Nenhum comprovante enviado.</td></tr>';
           return;
         }
         comprovantes.forEach(c => {
@@ -164,44 +248,71 @@
               </button>
             </td>
             <td><span class="badge bg-info">${c.tipo}</span></td>
-            <td>R$ ${c.valor}</td>
-            <td>R$ ${(c.valor * 0.9).toFixed(2)}</td>
-            <td>R$ ${(c.valor * 0.1).toFixed(2)}</td>
+            <td>US$ ${c.valor}</td>
+            <td>US$ ${(c.valor * 0.9).toFixed(2)}</td>
+            <td>US$ ${(c.valor * 0.1).toFixed(2)}</td>
             <td>${c.data}</td>
             <td><span class="status-badge bg-pending">${c.status}</span></td>
-            <td>-</td>
           `;
           tbody.appendChild(tr);
         });
       })
       .catch(err => {
         console.error('Erro ao carregar comprovantes:', err);
-        document.getElementById('enviados').innerHTML = '<tr><td colspan="9" class="text-center text-danger">Erro ao carregar comprovantes.</td></tr>';
+        document.getElementById('enviados').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Erro ao carregar comprovantes.</td></tr>';
       });
 
-    // Função: ver comprovante
+    // Função: ver comprovante (imagem ou PDF)
     function verComprovante(src) {
-      document.getElementById('modalImg').src = src;
+      const modalImg = document.getElementById('modalImg');
+      const modalPdf = document.getElementById('modalPdf');
+      const ext = src.split('.').pop().toLowerCase();
+
+      if (ext === 'pdf') {
+        modalPdf.src = src;
+        modalPdf.style.display = 'block';
+        modalImg.style.display = 'none';
+      } else {
+        modalImg.src = src;
+        modalImg.style.display = 'block';
+        modalPdf.style.display = 'none';
+      }
+
       new bootstrap.Modal(document.getElementById('comprovanteModal')).show();
     }
 
     // Enviar novo comprovante
     document.getElementById('formComprovante').addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const tipo = document.getElementById('tipo').value;
-      const valor = document.getElementById('valor').value;
+      const valor = document.getElementById('valor').value.replace(',', '.');
+      const imagem = document.getElementById('imagem').files[0];
 
-      const res = await fetch('/api/comprovantes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo, valor })
-      });
+      if (!imagem) {
+        return alert('Por favor, selecione um comprovante (imagem ou PDF).');
+      }
 
-      if (res.ok) {
-        alert('Comprovante enviado com sucesso!');
-        location.reload();
-      } else {
-        alert('Erro ao enviar comprovante.');
+      const formData = new FormData();
+      formData.append('tipo', tipo);
+      formData.append('valor', valor);
+      formData.append('imagem', imagem);
+
+      try {
+        const res = await fetch('/api/comprovantes', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (res.ok) {
+          alert('Comprovante enviado com sucesso!');
+          location.reload();
+        } else {
+          const data = await res.json();
+          alert(data.erro || 'Erro ao enviar comprovante.');
+        }
+      } catch (err) {
+        alert('Erro de conexão. Tente novamente.');
       }
     });
   </script>

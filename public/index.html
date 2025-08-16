@@ -116,7 +116,7 @@
             <div class="card shadow-sm text-center p-3">
               <div class="card-icon text-success"><i class="bi bi-cash-stack"></i></div>
               <div class="card-title">Doações Recebidas</div>
-              <h4 class="text-success">R$ 1.000,00</h4>
+              <h4 class="text-success">US$ 1.000,00</h4>
             </div>
           </div>
 
@@ -125,7 +125,7 @@
             <div class="card shadow-sm text-center p-3">
               <div class="card-icon text-danger"><i class="bi bi-cash-coin"></i></div>
               <div class="card-title">Doações Feitas</div>
-              <h4 class="text-danger">R$ 1.400,00</h4>
+              <h4 class="text-danger">US$ 1.400,00</h4>
             </div>
           </div>
 
@@ -168,9 +168,9 @@
               <div class="mt-3 p-2 bg-light border rounded">
                 <small>
                   <strong>Regra do Sistema:</strong><br>
-                  - 90% da doação vai para o próximo da fila<br>
-                  - 10% é retido para manutenção (USDT/Polygon)<br>
-                  - Carteira: <code>0x7ed...8789</code>
+                  - 90% da doação (US$) vai para o próximo da fila<br>
+                  - 10% é retido para manutenção<br>
+                  - Sempre envie 10% para a carteira abaixo
                 </small>
               </div>
             </div>
@@ -181,9 +181,9 @@
             <div class="card shadow-sm text-center p-3">
               <div class="card-icon text-info"><i class="bi bi-wallet"></i></div>
               <div class="card-title">Carteira do Sistema (10%)</div>
-              <p><strong>USDT na rede Polygon</strong></p>
-              <code>0x7ed5449fC0C22dDae84Fed6e3F6BbA68082b8789</code>
-              <small class="text-muted">Sempre envie 10% para esta carteira ao doar.</small>
+              <p><strong>Rede: BNB Smart Chain (BEP20)</strong></p>
+              <code>0x8d29C6381AD1FD53c8f6dd4DCab6fc93539186a9</code>
+              <small class="text-muted">Envie sempre 10% do valor doado para esta carteira.</small>
             </div>
           </div>
 
@@ -273,13 +273,13 @@
               document.getElementById('proximoPagamento').innerHTML = `
                 <div class="alert alert-success p-2">
                   <i class="bi bi-check-circle"></i> <strong>Pronto para receber!</strong><br>
-                  Você receberá <strong>R$ ${valorReceber}</strong> do próximo doador.
+                  Você receberá <strong>US$ ${valorReceber}</strong> do próximo doador.
                 </div>
               `;
             } else {
               document.getElementById('proximoPagamento').innerHTML = `
                 <p><i class="bi bi-user-clock text-info"></i> Você está na posição <strong>#${posicao}</strong></p>
-                <p>Próximo pagamento: <strong>R$ ${valorReceber}</strong></p>
+                <p>Próximo pagamento: <strong>US$ ${valorReceber}</strong></p>
                 <p class="text-muted">Aguarde sua vez na fila</p>
               `;
             }
