@@ -99,9 +99,10 @@
         <a href="new-account.html"><i class="bi bi-person-plus"></i> Novo Cadastro</a>
         <a href="profile-ch.html"><i class="bi bi-person"></i> Editar Perfil</a>
         <a href="receipts.html"><i class="bi bi-currency-dollar"></i> Doações</a>
-       <a href="#" onclick="confirmarSair(event)" class="text-decoration-none">
-  <i class="bi bi-box-arrow-right text-danger"></i> Sair
-</a>
+        <!-- Botão Sair Corrigido -->
+        <a href="#" class="text-decoration-none" id="btnSair">
+          <i class="bi bi-box-arrow-right text-danger"></i> Sair
+        </a>
       </nav>
 
       <!-- Main Content -->
@@ -192,37 +193,39 @@
   </div>
 
   <!-- Scripts -->
+
+  <!-- 🔒 Proteção: Verifica login antes de carregar -->
   <script>
-    // 🔒 Proteção: se o fetch falhar, não fique em loop
-    async function carregarUsuario() {
+    (async () => {
       try {
         const res = await fetch('/api/usuario', { 
           method: 'GET', 
           credentials: 'same-origin' 
         });
-
-        if (!res.ok) {
-          throw new Error('Não autenticado');
-        }
-
-        const data = await res.json();
-        document.getElementById('nomeUsuario').textContent = data.nome;
+        if (!res.ok) throw new Error('Não autenticado');
       } catch (err) {
-        console.warn('Usuário não autenticado ou erro na API:', err);
-        // Redireciona limpo, sem loop
-        window.location.href = '/?erro=1';
+        if (window.location.pathname !== '/login.html') {
+          window.location.href = '/?erro=1';
+        }
       }
-    }
-
-    // Chama apenas uma vez
-    if (document.getElementById('nomeUsuario')) {
-      carregarUsuario();
-    }
+    })();
   </script>
 
+  <!-- Carregar dados do usuário -->
   <script>
+    // Carregar nome do usuário
+    fetch('/api/usuario', { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('nomeUsuario').textContent = data.nome || data.usuario;
+      })
+      .catch(err => {
+        console.error('Erro ao carregar usuário:', err);
+        window.location.href = '/?erro=1';
+      });
+
     // Carregar nível e posição na fila
-    fetch('/api/giros')
+    fetch('/api/giros', { credentials: 'same-origin' })
       .then(r => r.json())
       .then(data => {
         document.getElementById('nivelUsuario').textContent = data.nivelAtual;
@@ -235,7 +238,7 @@
       .catch(err => console.error('Erro ao carregar giros:', err));
 
     // Carregar próxima doação
-    fetch('/api/usuario')
+    fetch('/api/usuario', { credentials: 'same-origin' })
       .then(r => r.json())
       .then(usuario => {
         if (!usuario.nivel || usuario.nivel === 1) {
@@ -245,7 +248,7 @@
           return;
         }
 
-        return fetch('/api/giros')
+        return fetch('/api/giros', { credentials: 'same-origin' })
           .then(r => r.json())
           .then(girosData => {
             const nivelAtual = usuario.nivel;
@@ -270,13 +273,13 @@
               document.getElementById('proximoPagamento').innerHTML = `
                 <div class="alert alert-success p-2">
                   <i class="bi bi-check-circle"></i> <strong>Pronto para receber!</strong><br>
-                  Você receberá <strong>US$ ${valorReceber}</strong> do próximo doador.
+                  Você receberá <strong>R$ ${valorReceber}</strong> do próximo doador.
                 </div>
               `;
             } else {
               document.getElementById('proximoPagamento').innerHTML = `
                 <p><i class="bi bi-user-clock text-info"></i> Você está na posição <strong>#${posicao}</strong></p>
-                <p>Próximo pagamento: <strong>US$ ${valorReceber}</strong></p>
+                <p>Próximo pagamento: <strong>R$ ${valorReceber}</strong></p>
                 <p class="text-muted">Aguarde sua vez na fila</p>
               `;
             }
@@ -291,7 +294,10 @@
 
     // Função: entrar na fila
     function entrarNaFila() {
-      fetch('/api/entrar-na-fila', { method: 'POST' })
+      fetch('/api/entrar-na-fila', { 
+        method: 'POST', 
+        credentials: 'same-origin' 
+      })
         .then(r => r.json())
         .then(data => {
           alert(data.mensagem || data.erro);
@@ -302,14 +308,13 @@
         });
     }
 
-    // ✅ Função: confirmar saída
-    function confirmarSair(event) {
-  event.preventDefault();
-  if (confirm('Tem certeza que deseja sair?')) {
-    // Redireciona para a rota de logout
-    window.location.href = '/logout';
-  }
-}
+    // ✅ Botão Sair: destrói sessão e redireciona
+    document.getElementById('btnSair').addEventListener('click', function(e) {
+      e.preventDefault();
+      if (confirm('Tem certeza que deseja sair?')) {
+        window.location.href = '/logout'; // Chama o servidor
+      }
+    });
   </script>
 
   <!-- Bootstrap JS -->

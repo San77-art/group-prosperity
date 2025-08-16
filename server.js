@@ -492,12 +492,21 @@ app.get('/api/comprovantes', verificaLogin, (req, res) => {
 
 // Rota: GET /logout
 app.get('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/?sucesso=logout');
-  });
+  if (req.session) {
+    req.session.destroy(err => {
+      if (err) {
+        console.error('Erro ao destruir sessão:', err);
+        return res.redirect('/?erro=1');
+      }
+      res.clearCookie('connect.sid', { path: '/' }); // Remove o cookie da sessão
+      res.redirect('/?sucesso=logout'); // Vai para o login com mensagem
+    });
+  } else {
+    res.redirect('/');
+  }
 });
 
-// Inicia servidor
+//Escuta ai 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor rodando em http://0.0.0.0:${PORT}`);
 });

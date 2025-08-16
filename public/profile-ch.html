@@ -86,26 +86,19 @@
 </head>
 <body>
 
-  <!-- 🔒 Proteção: Verifica login antes de carregar -->
-  <script>
-    // Evita múltiplos redirecionamentos
-    if (window.location.pathname !== '/login.html' && window.location.search.includes('erro=1')) {
-      // Se já tem erro na URL, não redireciona de novo
-    }
-
-    fetch('/api/usuario', { 
-      method: 'GET', 
-      credentials: 'same-origin' 
-    })
-    .then(r => {
-      if (!r.ok) throw new Error('Não autenticado');
-    })
-    .catch(() => {
+ <script>
+  // 🔒 Proteção: Verifica login antes de carregar
+  (async () => {
+    try {
+      const res = await fetch('/api/usuario', { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('Não autenticado');
+    } catch (err) {
       if (window.location.pathname !== '/login.html') {
         window.location.href = '/?erro=1';
       }
-    });
-  </script>
+    }
+  })();
+</script>
 
   <div class="container-fluid">
     <div class="row">
